@@ -25,7 +25,8 @@ void rpc_register_normal() {
     m->handler = add2_i8;
     server->methods[0] = m;
 
-    rpc_register(server, "TestName2", add2_i8);
+    int ret_val = rpc_register(server, "TestName2", add2_i8);
+    assert(ret_val == 1);
     assert(strcmp(server->methods[0]->name, "TestName1") == 0);
     assert(strcmp(server->methods[1]->name, "TestName2") == 0);
 }
@@ -38,7 +39,8 @@ void rpc_register_duplicate() {
     m->handler = add2_i8;
     server->methods[0] = m;
 
-    rpc_register(server, "TestName1", add2_i8);
+    int ret_val = rpc_register(server, "TestName1", add2_i8);
+    assert(ret_val == 1);
     assert(strcmp(server->methods[0]->name, "TestName1") == 0);
     assert(server->methods[1] == NULL);
 }
