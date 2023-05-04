@@ -11,6 +11,7 @@ struct rpc_server {
     int server_fd;
     struct sockaddr* socket_address;
     socklen_t* address_len;
+    method* methods[MAX_METHOD_NUMBER]; 
 };
 
 rpc_server *rpc_init_server(int port) {
@@ -49,6 +50,7 @@ rpc_server *rpc_init_server(int port) {
         return NULL;
     }
     rpc_server* server = (rpc_server*)malloc(sizeof(rpc_server));
+    memset(server, 0, sizeof(rpc_server));
 
     server->address_len = (socklen_t*)sizeof(address);
     server->socket_address = (struct sockaddr*)&address;
@@ -58,6 +60,31 @@ rpc_server *rpc_init_server(int port) {
 }
 
 int rpc_register(rpc_server *srv, char *name, rpc_handler handler) {
+    method** registed_methods = srv->methods;
+    int index = 0;
+    for (int i = 0; i < MAX_METHOD_NUMBER; ++i) {
+        if ((registed_methods[i] != NULL) && (registed_methods[i]->name != NULL) && (strlen(registed_methods[i]->name) != 0) && (strcmp(registed_methods[i]->name, name) == 0)) {
+            registed_methods[i]->handler = handler;
+            break;
+        }
+
+        if ((registed_methods[i] != NULL) && (registed_methods[i]->name != NULL) && (strlen(registed_methods[i]->name) != 0)) {
+          ++ index;
+        } else {
+            break;
+        }
+    }
+    if (index == MAX_METHOD_NUMBER) {
+        // Error: This methods has reach max numbers.
+        return -1;
+    } else {
+        method* m = (method*)malloc(sizeof(method));
+        memset(m, 0, sizeof(method));
+        m->name = name;
+        m->handler = handler;
+        registed_methods[index] = m;
+        return 1;
+    }
     return -1;
 }
 

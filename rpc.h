@@ -3,6 +3,7 @@
 
 #ifndef RPC_H
 #define RPC_H
+#define MAX_METHOD_NUMBER 100
 
 #include <stddef.h>
 
@@ -11,19 +12,23 @@ typedef struct rpc_server rpc_server;
 /* Client state */
 typedef struct rpc_client rpc_client;
 
+/* Handle for remote function */
+typedef struct rpc_handle rpc_handle;
+
+/* Handler for remote functions, which takes rpc_data* as input and produces
+ * rpc_data* as output */
 /* The payload for requests/responses */
 typedef struct {
     int data1;
     size_t data2_len;
     void *data2;
 } rpc_data;
-
-/* Handle for remote function */
-typedef struct rpc_handle rpc_handle;
-
-/* Handler for remote functions, which takes rpc_data* as input and produces
- * rpc_data* as output */
 typedef rpc_data *(*rpc_handler)(rpc_data *);
+
+typedef struct {
+    char* name;
+    rpc_handler handler;
+} method;
 
 /* ---------------- */
 /* Server functions */
