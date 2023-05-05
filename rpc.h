@@ -26,8 +26,8 @@ typedef struct {
 
 typedef struct {
     int request_method;
-    size_t data_length;
-    char data[1];
+    long address;
+    rpc_data data;
 } request;
 
 typedef rpc_data *(*rpc_handler)(rpc_data *);
