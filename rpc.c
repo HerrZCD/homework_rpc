@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 struct rpc_server {
     /* Add variable(s) for server state */
@@ -112,7 +113,8 @@ void rpc_serve_all(rpc_server *srv) {
 }
 
 struct rpc_client {
-    /* Add variable(s) for client state */
+    int status;
+    int client_fd;
 };
 
 struct rpc_handle {
@@ -120,10 +122,46 @@ struct rpc_handle {
 };
 
 rpc_client *rpc_init_client(char *addr, int port) {
-    return NULL;
+    int status, valread, client_fd;
+	struct sockaddr_in serv_addr;
+	if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+		return NULL;
+	}
+
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_port = htons(port);
+
+	// Convert IPv4 and IPv6 addresses from text to binary
+	// form
+    // TODO: Use IP adress from parameter.
+	if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)
+		<= 0) {
+		printf(
+			"\nInvalid address/ Address not supported \n");
+		return NULL;
+	}
+
+	if ((status
+		= connect(client_fd, (struct sockaddr*)&serv_addr,
+				sizeof(serv_addr)))
+		< 0) {
+		printf("\nConnection Failed \n");
+		return NULL;
+	}
+    rpc_client* client = (rpc_client*)malloc(sizeof(rpc_client));
+    memset(client, 0, sizeof(rpc_client));
+    client->status = status;
+    client->client_fd = client_fd;
+    return client;
 }
 
 rpc_handle *rpc_find(rpc_client *cl, char *name) {
+    char* hello = "Hello from client";
+	char buffer[1024] = { 0 };
+    send(cl->client_fd, hello, strlen(hello), 0);
+	printf("Hello message sent\n");
+	int valread = read(cl->client_fd, buffer, 1024);
+	printf("%s\n", buffer);
     return NULL;
 }
 
