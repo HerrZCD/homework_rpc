@@ -9,6 +9,7 @@
 struct rpc_server {
     /* Add variable(s) for server state */
     int server_fd;
+    int socket;
     struct sockaddr* socket_address;
     socklen_t* address_len;
     method* methods[MAX_METHOD_NUMBER]; 
@@ -45,16 +46,15 @@ rpc_server *rpc_init_server(int port) {
         perror("bind failed");
         return NULL;
     }
-    if (listen(server_fd, 3) < 0) {
-        perror("listen");
-        return NULL;
-    }
     rpc_server* server = (rpc_server*)malloc(sizeof(rpc_server));
     memset(server, 0, sizeof(rpc_server));
 
-    server->address_len = (socklen_t*)sizeof(address);
+    int address_len = sizeof(address);
+
+    server->address_len = (socklen_t*)&address_len;
     server->socket_address = (struct sockaddr*)&address;
     server->server_fd = server_fd;
+    server->socket = new_socket;
     return server;
 
 }
@@ -89,6 +89,25 @@ int rpc_register(rpc_server *srv, char *name, rpc_handler handler) {
 }
 
 void rpc_serve_all(rpc_server *srv) {
+    char buffer[1024] = { 0 };
+	char* hello = "Hello from server";
+    while (1) {
+        if (listen(srv->server_fd, 3) < 0) {
+            perror("listen");
+            exit(EXIT_FAILURE);
+        }
+        if ((srv->socket
+            = accept(srv->server_fd, srv->socket_address,
+                    srv->address_len))
+            < 0) {
+            perror("accept");
+            exit(EXIT_FAILURE);
+        }
+        int valread = read(srv->socket, buffer, 20);
+        printf("%s\n", buffer);
+        send(srv->socket, hello, strlen(hello), 0);
+        printf("Hello message sent\n");
+    }
 
 }
 
