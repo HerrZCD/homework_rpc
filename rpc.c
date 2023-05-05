@@ -129,13 +129,27 @@ void rpc_serve_all(rpc_server *srv) {
             } else {
                 send(srv->socket, hello, strlen(hello), 0);
             }
-        } else if (readed_data && (readed_data->request_method == 2)) {
-            rpc_handler* handler = (rpc_handler*)readed_data->address;
-            rpc_data data = readed_data->data;
-            data.data2 = (char*)&data.data2;
-            rpc_data* res = (*handler)(&data);
-            printf("res is: %d", res->data1);
+        } else if (readed_data->request_method == 2) {
+            printf("handle rpc find\n");
+            printf("the requested functions is %d\n", (int)*(char*)&readed_data->data.data2);
             send(srv->socket, hello, strlen(hello), 0);
+            // handle = get_rpc_handle(srv, (const char*)&readed_data->data.data2);
+            // if (handle != NULL) {
+            //     printf("handle address is %ld\n", handle->method_address);
+            //     send(srv->socket, (void*)handle, sizeof(rpc_handle), 0);
+            //     free(handle);
+            // } else {
+            //     send(srv->socket, hello, strlen(hello), 0);
+            // }
+            // printf("cao");
+            // send(srv->socket, hello, strlen(hello), 0);
+
+            // rpc_handler* handler = (rpc_handler*)readed_data->address;
+            // rpc_data data = readed_data->data;
+            // data.data2 = (char*)&data.data2;
+            // rpc_data* res = (*handler)(&data);
+            // printf("res is: %d", res->data1);
+            // send(srv->socket, hello, strlen(hello), 0);
             // int value1 = readed_data;
             // int value2 = readed_data->value2;
             // printf("value1: %d value2: %d", value1, value2);
@@ -241,23 +255,53 @@ rpc_data *rpc_call(rpc_client *cl, rpc_handle *h, rpc_data *payload) {
 		printf("\nConnection Failed \n");
 		return NULL;
 	}
+    // rpc_handle* handle = (rpc_handle*)malloc(sizeof(rpc_handle));
+    // memset(handle, 0, sizeof(rpc_handle));
+
+    // int size = sizeof(request) + strlen(payload->data2) + 10;
+    // request* r = (request*)malloc(size);
+    // memset(r, 0, size);
+    // r->request_method = 2;
+    // r->address = h->method_address;
+    // r->data.data1 = payload->data1;
+    // r->data.data2_len = payload->data2_len;
+    // r->data = *payload;
+    // memcpy(&r->data.data2, payload->data2, 1);
+    // send(cl->client_fd, (void*)r, size, 0);
+    // // if(send(cl->client_fd, "hello", strlen("hello"), 0) < 0) {
+    // //   // Error handler goes here;
+    // // }
+    // int valread = read(cl->client_fd, (void*)handle, 1024);
+    // printf("sending rpc call\n");
+    // free(r);
+    // return NULL;
+
+    const char* name = "zhang";
+
+    int size = sizeof(request) + 1 + 1;
+    request* data = (request*)malloc(size);
+    memset(data, 0, size);
+    memcpy(&data->data.data2, payload->data2, 1);
+    data->data.data2_len = 1;
+    data->request_method = 2;
+    data->data.data1 = payload->data1;
+    data->address = h->method_address;
+    // int size = strlen(name) + 1 + sizeof(request);
+    // request* data = (request*)malloc(size);
+    // memset(data, 0, size);
+    // data->request_method = htons(1);
+    // strncpy(data->data, name, strlen(name)+1);
+
+    // data->data_length = strlen(name);
+	
     rpc_handle* handle = (rpc_handle*)malloc(sizeof(rpc_handle));
     memset(handle, 0, sizeof(rpc_handle));
-
-    int size = sizeof(request) + strlen(payload->data2) + 1;
-    request* r = (request*)malloc(size);
-    memset(r, 0, size);
-    r->request_method = htons(2);
-    r->address = htons(h->method_address);
-    r->data = *payload;
-    memcpy(&r->data.data2, payload->data2, strlen(payload->data2) + 1);
-    // send(cl->client_fd, (void*)r, size, 0);
-    if(send(cl->client_fd, "hello", strlen("hello"), 0) < 0) {
-      // Error handler goes here;
-    }
-    int valread = read(cl->client_fd, (void*)handle, 1024);
-    printf("sending rpc call\n");
-    free(r);
+    send(cl->client_fd, (void*)data, size, 0);
+    printf("send items %s\n", (const char*)&data->data.data2);
+	int valread = read(cl->client_fd, (void*)handle, 1024);
+    printf("received func addr %ld\n", handle->method_address);
+    free(data);
+    close(cl->client_fd);
     return NULL;
 }
 
