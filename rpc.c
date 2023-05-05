@@ -131,7 +131,12 @@ void rpc_serve_all(rpc_server *srv) {
             }
         } else if (readed_data->request_method == 2) {
             printf("handle rpc find\n");
+            printf("execute2\n");
             printf("the requested functions is %d\n", (int)*(char*)&readed_data->data.data2);
+            printf("execute1\n");
+            printf("value1 is %d\n", readed_data->data.data1);
+            printf("length is %d\n", (int)readed_data->data.data2_len);
+            printf("addr is %ld\n", readed_data->address);
             send(srv->socket, hello, strlen(hello), 0);
             // handle = get_rpc_handle(srv, (const char*)&readed_data->data.data2);
             // if (handle != NULL) {
