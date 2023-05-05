@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+struct rpc_handle {
+    long method_address;
+};
+
 int main(int argc, char *argv[]) {
     int exit_code = 0;
 
@@ -17,6 +21,7 @@ int main(int argc, char *argv[]) {
         exit_code = 1;
         goto cleanup;
     }
+    printf("add2 address is %ld", handle_add2->method_address);
 
     for (int i = 0; i < 2; i++) {
         /* Prepare request */

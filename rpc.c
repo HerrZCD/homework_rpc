@@ -116,20 +116,20 @@ void rpc_serve_all(rpc_server *srv) {
         int valread = read(srv->socket, buffer, 1024);
         request* readed_data = (request*)buffer;
         printf("readed %s", (const char*)readed_data->data);
-        rpc_handle* handle;
+        rpc_handle* handle = NULL;
         if (readed_data && (readed_data->request_method == 1)) {
-            printf("handle rpc find");
-            printf("the requested functions is %s", (const char*)readed_data->data);
-            rpc_handle* handle = get_rpc_handle(srv, readed_data->data);
+            printf("handle rpc find\n");
+            printf("the requested functions is %s\n", (const char*)readed_data->data);
+            handle = get_rpc_handle(srv, readed_data->data);
         }
         if (handle == NULL) {
-            printf("%s\n", buffer);
+            printf("handle is null\n");
             send(srv->socket, hello, strlen(hello), 0);
             printf("Hello message sent\n");
         } else {
-            printf("%s\n", buffer);
-            send(srv->socket, handle, strlen(hello), 0);
-            printf("Hello message sent\n");
+            printf("handle address is %ld\n", handle->method_address);
+            send(srv->socket, (void*)handle, sizeof(rpc_handle), 0);
+            free(handle);
         }
     }
 
@@ -146,7 +146,7 @@ rpc_handle* get_rpc_handle(rpc_server *srv, const char* name) {
         if ((srv->methods[i] != NULL) && (srv->methods[i]->name != NULL) && (strlen(srv->methods[i]->name) != 0) && (strcmp(srv->methods[i]->name, name) == 0)) {
             rpc_handle* handle = (rpc_handle*)malloc(sizeof(rpc_handle));
             memset(handle, 0, sizeof(rpc_handle));
-            printf("found addr, %ld", handle->method_address);
+            printf("found addr, %ld\n", (long)srv->methods[i]->handler);
             handle->method_address = (long)srv->methods[i]->handler;
             return handle;
         }
@@ -199,13 +199,13 @@ rpc_handle *rpc_find(rpc_client *cl, char *name) {
     // strncpy(data->data, name, strlen(name)+1);
 
     // data->data_length = strlen(name);
-	char buffer[1024] = { 0 };
+	
+    rpc_handle* handle = (rpc_handle*)malloc(sizeof(rpc_handle));
+    memset(handle, 0, sizeof(rpc_handle));
     send(cl->client_fd, (void*)data, sizeof(request), 0);
-    printf("send items %s", (const char*)data->data);
-	// int valread = read(cl->client_fd, buffer, 1024);
-    rpc_handle* handle = (rpc_handle*)buffer;
-    printf("received func addr %ld", handle->method_address);
-	printf("%s\n", buffer);
+    printf("send items %s\n", (const char*)data->data);
+	// int valread = read(cl->client_fd, (void*)handle, 1024);
+    printf("received func addr %ld\n", handle->method_address);
     free(data);
     return handle;
 }
