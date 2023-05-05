@@ -23,7 +23,16 @@ typedef struct {
     size_t data2_len;
     void *data2;
 } rpc_data;
+
+typedef struct {
+    int request_method;
+    size_t data_length;
+    char data[1];
+} request;
+
 typedef rpc_data *(*rpc_handler)(rpc_data *);
+
+
 
 typedef struct {
     char* name;

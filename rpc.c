@@ -104,7 +104,13 @@ void rpc_serve_all(rpc_server *srv) {
             perror("accept");
             exit(EXIT_FAILURE);
         }
-        int valread = read(srv->socket, buffer, 20);
+        int valread = read(srv->socket, buffer, 1024);
+        request* readed_data = (request*)buffer;
+        printf("readed %s", (const char*)readed_data->data);
+        if (readed_data && (readed_data->request_method == 1)) {
+            printf("handle rpc find");
+            printf("the requested functions is %s", (const char*)readed_data->data);
+        }
         printf("%s\n", buffer);
         send(srv->socket, hello, strlen(hello), 0);
         printf("Hello message sent\n");
@@ -156,12 +162,22 @@ rpc_client *rpc_init_client(char *addr, int port) {
 }
 
 rpc_handle *rpc_find(rpc_client *cl, char *name) {
-    char* hello = "Hello from client";
-	char buffer[1024] = { 0 };
-    send(cl->client_fd, hello, strlen(hello), 0);
-	printf("Hello message sent\n");
-	int valread = read(cl->client_fd, buffer, 1024);
-	printf("%s\n", buffer);
+    request* data = (request*)malloc(sizeof(request));
+    memcpy(data->data, name, strlen(name)+1);
+    data->request_method = 1;
+    // int size = strlen(name) + 1 + sizeof(request);
+    // request* data = (request*)malloc(size);
+    // memset(data, 0, size);
+    // data->request_method = htons(1);
+    // strncpy(data->data, name, strlen(name)+1);
+
+    // data->data_length = strlen(name);
+	// char buffer[1024] = { 0 };
+    send(cl->client_fd, (void*)data, sizeof(request), 0);
+    printf("send items %s", (const char*)data->data);
+	// int valread = read(cl->client_fd, buffer, 1024);
+	// printf("%s\n", buffer);
+    free(data);
     return NULL;
 }
 
