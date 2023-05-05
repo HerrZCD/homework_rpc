@@ -7,6 +7,15 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
+struct rpc_client {
+    int status;
+    int client_fd;
+};
+
+struct rpc_handle {
+    long method_address;
+};
+
 struct rpc_server {
     /* Add variable(s) for server state */
     int server_fd;
@@ -118,14 +127,20 @@ void rpc_serve_all(rpc_server *srv) {
 
 }
 
-struct rpc_client {
-    int status;
-    int client_fd;
-};
-
-struct rpc_handle {
-    /* Add variable(s) for handle */
-};
+rpc_handle* get_rpc_handle(rpc_server *srv, const char* name) {
+    if (srv == NULL) {
+        return NULL;
+    }
+    for (int i = 0; i < MAX_METHOD_NUMBER; ++i) {
+        if ((srv->methods[i] != NULL) && (srv->methods[i]->name != NULL) && (strlen(srv->methods[i]->name) != 0) && (strcmp(srv->methods[i]->name, name) == 0)) {
+            rpc_handle* handle = (rpc_handle*)malloc(sizeof(rpc_handle));
+            memset(handle, 0, sizeof(rpc_handle));
+            handle->method_address = (long)srv->methods[i]->handler;
+            return handle;
+        }
+    }
+    return NULL;
+}
 
 rpc_client *rpc_init_client(char *addr, int port) {
     int status, valread, client_fd;

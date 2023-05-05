@@ -81,4 +81,6 @@ void rpc_close_client(rpc_client *cl);
 /* Frees a rpc_data struct */
 void rpc_data_free(rpc_data *data);
 
+rpc_handle* get_rpc_handle(rpc_server *srv, const char* name);
+
 #endif
