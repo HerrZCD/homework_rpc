@@ -10,6 +10,7 @@
 struct rpc_client {
     int status;
     int client_fd;
+    struct sockaddr_in serv_addr;
 };
 
 struct rpc_handle {
@@ -113,7 +114,7 @@ void rpc_serve_all(rpc_server *srv) {
             perror("accept");
             exit(EXIT_FAILURE);
         }
-        int valread = read(srv->socket, buffer, 1024);
+        int valread = recv(srv->socket, buffer, 1024, 0);
         request* readed_data = (request*)buffer;
         printf("readed %s\n", (const char*)readed_data);
         rpc_handle* handle = NULL;
@@ -129,7 +130,12 @@ void rpc_serve_all(rpc_server *srv) {
                 send(srv->socket, hello, strlen(hello), 0);
             }
         } else if (readed_data && (readed_data->request_method == 2)) {
-            // rpc_handler* handler = (rpc_handler*)readed_data->address;
+            rpc_handler* handler = (rpc_handler*)readed_data->address;
+            rpc_data data = readed_data->data;
+            data.data2 = (char*)&data.data2;
+            rpc_data* res = (*handler)(&data);
+            printf("res is: %d", res->data1);
+            send(srv->socket, hello, strlen(hello), 0);
             // int value1 = readed_data;
             // int value2 = readed_data->value2;
             // printf("value1: %d value2: %d", value1, value2);
@@ -193,6 +199,7 @@ rpc_client *rpc_init_client(char *addr, int port) {
     memset(client, 0, sizeof(rpc_client));
     client->status = status;
     client->client_fd = client_fd;
+    client->serv_addr = serv_addr;
     return client;
 }
 
@@ -218,17 +225,39 @@ rpc_handle *rpc_find(rpc_client *cl, char *name) {
 	int valread = read(cl->client_fd, (void*)handle, 1024);
     printf("received func addr %ld\n", handle->method_address);
     free(data);
+    close(cl->client_fd);
     return handle;
 }
 
 rpc_data *rpc_call(rpc_client *cl, rpc_handle *h, rpc_data *payload) {
-    request* r = (request*)malloc(sizeof(request) + payload->data2_len);
-    memset(r, 0, sizeof(request) + payload->data2_len);
-    r->request_method = htons(2);
-    r->address = h->method_address;
-    r->data = *payload;
-    send(cl->client_fd, (void*)r, sizeof(request), 0);
+    if ((cl->client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+		return NULL;
+	}
+    int status;
+    if ((status
+		= connect(cl->client_fd, (struct sockaddr*)&cl->serv_addr,
+				sizeof(cl->serv_addr)))
+		< 0) {
+		printf("\nConnection Failed \n");
+		return NULL;
+	}
+    rpc_handle* handle = (rpc_handle*)malloc(sizeof(rpc_handle));
+    memset(handle, 0, sizeof(rpc_handle));
 
+    int size = sizeof(request) + strlen(payload->data2) + 1;
+    request* r = (request*)malloc(size);
+    memset(r, 0, size);
+    r->request_method = htons(2);
+    r->address = htons(h->method_address);
+    r->data = *payload;
+    memcpy(&r->data.data2, payload->data2, strlen(payload->data2) + 1);
+    // send(cl->client_fd, (void*)r, size, 0);
+    if(send(cl->client_fd, "hello", strlen("hello"), 0) < 0) {
+      // Error handler goes here;
+    }
+    int valread = read(cl->client_fd, (void*)handle, 1024);
+    printf("sending rpc call\n");
+    free(r);
     return NULL;
 }
 
