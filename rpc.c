@@ -204,7 +204,7 @@ rpc_handle *rpc_find(rpc_client *cl, char *name) {
     memset(handle, 0, sizeof(rpc_handle));
     send(cl->client_fd, (void*)data, sizeof(request), 0);
     printf("send items %s\n", (const char*)data->data);
-	// int valread = read(cl->client_fd, (void*)handle, 1024);
+	int valread = read(cl->client_fd, (void*)handle, 1024);
     printf("received func addr %ld\n", handle->method_address);
     free(data);
     return handle;
