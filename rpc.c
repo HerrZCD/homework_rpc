@@ -138,6 +138,13 @@ void rpc_serve_all(rpc_server *srv) {
             printf("length is %d\n", (int)readed_data->data.data2_len);
             printf("addr is %ld\n", readed_data->address);
             send(srv->socket, hello, strlen(hello), 0);
+            rpc_data data;
+            data.data1 = readed_data->data.data1;
+            data.data2 = (char*)&readed_data->data.data2;
+            data.data2_len = 1;
+
+            rpc_data* result = ((rpc_handler)readed_data->address)(&data);
+            // printf("result is %d\n", result->data1);
             // handle = get_rpc_handle(srv, (const char*)&readed_data->data.data2);
             // if (handle != NULL) {
             //     printf("handle address is %ld\n", handle->method_address);
