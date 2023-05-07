@@ -1,0 +1,19 @@
+1. Should the server accept calls from everyone, or just a subset of users?
+
+No, The server should accept calls from a subset of users, to make connections balance to
+all servers.
+2. Should authentication etc. be provided by the RPC framework, or by the functions that use the RPC frame work?
+authentication should be provided by framework, so once authenticated, user can use functions with higher performance.
+3. What transport layer protocol should be used? What are the trade-offs?
+In this project I use tcp, it is guaranteed that we will not lose network packets but it has
+cost on speed.
+4. In which function(s) should the socket(s) be created?
+In the Initialises of client/server.
+5. Should rpc_client and rpc_server be allocated dynamically or statically? What are the implications
+for the client and server code?
+We should create both objects dynamically(on heap), so we can still refer to such objects when we
+leave the scope. Memory leak may occur if we forgot to free memory.
+6. What happens if one host uses big-endian byte order and the other uses little-endian? How does that relate
+to “network byte order”?
+They read numbers from opposite position, so we will get wrong numbers if we do not set a unified order before
+sending messages. We use big-endian as network byte order.
