@@ -10,7 +10,7 @@
 struct rpc_client {
     int status;
     int client_fd;
-    struct sockaddr_in serv_addr;
+    struct sockaddr_in6 serv_addr;
 };
 
 struct rpc_handle {
@@ -28,29 +28,27 @@ struct rpc_server {
 
 rpc_server *rpc_init_server(int port) {
     int server_fd, new_socket, valread;
-    struct sockaddr_in address;
+    struct sockaddr_in6 address;
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[1024] = { 0 };
 
     // Creating socket file descriptor
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((server_fd = socket(AF_INET6, SOCK_STREAM, 0)) < 0) {
         perror("socket failed");
         return NULL;
     }
 
-    // Forcefully attaching socket to the port 8080
     if (setsockopt(server_fd, SOL_SOCKET,
                 SO_REUSEADDR, &opt,
                 sizeof(opt))) {
         perror("setsockopt");
         return NULL;
     }
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(port);
+    address.sin6_family = AF_INET6;
+    address.sin6_port = htons(port);
+    address.sin6_addr  = in6addr_any;
 
-    // Forcefully attaching socket to the port 8080
     if (bind(server_fd, (struct sockaddr*)&address,
             sizeof(address))
         < 0) {
@@ -193,18 +191,18 @@ rpc_handle* get_rpc_handle(rpc_server *srv, const char* name) {
 
 rpc_client *rpc_init_client(char *addr, int port) {
     int status, valread, client_fd;
-	struct sockaddr_in serv_addr;
-	if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+	struct sockaddr_in6 serv_addr;
+	if ((client_fd = socket(AF_INET6, SOCK_STREAM, 0)) < 0) {
 		return NULL;
 	}
 
-	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_port = htons(port);
+	serv_addr.sin6_family = AF_INET6;
+	serv_addr.sin6_port = htons(port);
 
 	// Convert IPv4 and IPv6 addresses from text to binary
 	// form
     // TODO: Use IP adress from parameter.
-	if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)
+	if (inet_pton(AF_INET6, addr, &serv_addr.sin6_addr)
 		<= 0) {
 		printf(
 			"\nInvalid address/ Address not supported \n");
@@ -246,7 +244,7 @@ rpc_handle *rpc_find(rpc_client *cl, char *name) {
 }
 
 rpc_data *rpc_call(rpc_client *cl, rpc_handle *h, rpc_data *payload) {
-    if ((cl->client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((cl->client_fd = socket(AF_INET6, SOCK_STREAM, 0)) < 0) {
 		return NULL;
 	}
     int status;
