@@ -127,7 +127,8 @@ void rpc_serve_all(rpc_server *srv) {
                 send(srv->socket, (void*)handle, sizeof(rpc_handle), 0);
                 free(handle);
             } else {
-                send(srv->socket, hello, strlen(hello), 0);
+                char* error = "No handle is found";
+                send(srv->socket, error, strlen(error), 0);
             }
         } else if (readed_data->request_method == 2) {
             printf("handle rpc find\n");
@@ -149,7 +150,6 @@ void rpc_serve_all(rpc_server *srv) {
             rpc_data* response = (rpc_data*)malloc(sizeof(rpc_data));
             memset(response, 0, sizeof(rpc_data));
             if (result == NULL) {
-                // printf("sended result is %d\n", response->data1);
                 // Error handling of add2.
                 send(srv->socket, (void*)response, sizeof(rpc_data), 0);
 
@@ -233,14 +233,7 @@ rpc_handle *rpc_find(rpc_client *cl, char *name) {
     memcpy(&data->data.data2, name, strlen(name) + 1);
     data->data.data2_len = strlen(name);
     data->request_method = 1;
-    // int size = strlen(name) + 1 + sizeof(request);
-    // request* data = (request*)malloc(size);
-    // memset(data, 0, size);
-    // data->request_method = htons(1);
-    // strncpy(data->data, name, strlen(name)+1);
 
-    // data->data_length = strlen(name);
-	
     rpc_handle* handle = (rpc_handle*)malloc(sizeof(rpc_handle));
     memset(handle, 0, sizeof(rpc_handle));
     send(cl->client_fd, (void*)data, size, 0);
@@ -264,28 +257,6 @@ rpc_data *rpc_call(rpc_client *cl, rpc_handle *h, rpc_data *payload) {
 		printf("\nConnection Failed \n");
 		return NULL;
 	}
-    // rpc_handle* handle = (rpc_handle*)malloc(sizeof(rpc_handle));
-    // memset(handle, 0, sizeof(rpc_handle));
-
-    // int size = sizeof(request) + strlen(payload->data2) + 10;
-    // request* r = (request*)malloc(size);
-    // memset(r, 0, size);
-    // r->request_method = 2;
-    // r->address = h->method_address;
-    // r->data.data1 = payload->data1;
-    // r->data.data2_len = payload->data2_len;
-    // r->data = *payload;
-    // memcpy(&r->data.data2, payload->data2, 1);
-    // send(cl->client_fd, (void*)r, size, 0);
-    // // if(send(cl->client_fd, "hello", strlen("hello"), 0) < 0) {
-    // //   // Error handler goes here;
-    // // }
-    // int valread = read(cl->client_fd, (void*)handle, 1024);
-    // printf("sending rpc call\n");
-    // free(r);
-    // return NULL;
-
-    const char* name = "zhang";
 
     int size = sizeof(request) + 1 + 1;
     request* data = (request*)malloc(size);
@@ -295,13 +266,6 @@ rpc_data *rpc_call(rpc_client *cl, rpc_handle *h, rpc_data *payload) {
     data->request_method = 2;
     data->data.data1 = payload->data1;
     data->address = h->method_address;
-    // int size = strlen(name) + 1 + sizeof(request);
-    // request* data = (request*)malloc(size);
-    // memset(data, 0, size);
-    // data->request_method = htons(1);
-    // strncpy(data->data, name, strlen(name)+1);
-
-    // data->data_length = strlen(name);
 
     send(cl->client_fd, (void*)data, size, 0);
     printf("send items %s\n", (const char*)&data->data.data2);
@@ -320,7 +284,7 @@ rpc_data *rpc_call(rpc_client *cl, rpc_handle *h, rpc_data *payload) {
 }
 
 void rpc_close_client(rpc_client *cl) {
-
+  free(cl);
 }
 
 void rpc_data_free(rpc_data *data) {

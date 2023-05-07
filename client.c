@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     }
     printf("add2 address is %ld", handle_add2->method_address);
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 30; i++) {
         /* Prepare request */
         char left_operand = i;
         char right_operand = 100;
