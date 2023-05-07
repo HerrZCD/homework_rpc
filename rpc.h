@@ -32,10 +32,8 @@ typedef struct {
 
 typedef rpc_data *(*rpc_handler)(rpc_data *);
 
-
-
 typedef struct {
-    char* name;
+    char *name;
     rpc_handler handler;
 } method;
 
@@ -81,6 +79,6 @@ void rpc_close_client(rpc_client *cl);
 /* Frees a rpc_data struct */
 void rpc_data_free(rpc_data *data);
 
-rpc_handle* get_rpc_handle(rpc_server *srv, const char* name);
+rpc_handle *get_rpc_handle(rpc_server *srv, const char *name);
 
 #endif

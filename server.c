@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Failed to init\n");
         exit(EXIT_FAILURE);
     }
-    
+
     if (rpc_register(state, "add2", add2_i8) == -1) {
         fprintf(stderr, "Failed to register add2\n");
         exit(EXIT_FAILURE);

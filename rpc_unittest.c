@@ -1,9 +1,9 @@
 #include "rpc.h"
-#include <stdlib.h>
-#include <sys/socket.h>
 #include <assert.h>
-#include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
 
 rpc_data *add2_i8(rpc_data *data) {
     return malloc(sizeof(rpc_data));
@@ -16,16 +16,16 @@ struct rpc_handle {
 struct rpc_server {
     /* Add variable(s) for server state */
     int server_fd;
-    struct sockaddr* socket_address;
-    socklen_t* address_len;
-    method* methods[MAX_METHOD_NUMBER]; 
+    struct sockaddr *socket_address;
+    socklen_t *address_len;
+    method *methods[MAX_METHOD_NUMBER];
 };
 
 void rpc_register_normal() {
-    rpc_server* server = (rpc_server*)malloc(sizeof(rpc_server));
+    rpc_server *server = (rpc_server *)malloc(sizeof(rpc_server));
     memset(server, 0, sizeof(rpc_server));
     server->server_fd = 1;
-    method* m = (method*)malloc(sizeof(method));
+    method *m = (method *)malloc(sizeof(method));
     m->name = "TestName1";
     m->handler = add2_i8;
     server->methods[0] = m;
@@ -37,10 +37,10 @@ void rpc_register_normal() {
 }
 
 void rpc_register_duplicate() {
-    rpc_server* server = (rpc_server*)malloc(sizeof(rpc_server));
+    rpc_server *server = (rpc_server *)malloc(sizeof(rpc_server));
     memset(server, 0, sizeof(rpc_server));
     server->server_fd = 1;
-    method* m = (method*)malloc(sizeof(method));
+    method *m = (method *)malloc(sizeof(method));
     memset(m, 0, sizeof(method));
     m->name = "TestName1";
     m->handler = add2_i8;
@@ -53,17 +53,17 @@ void rpc_register_duplicate() {
 }
 
 void get_rpc_handle_normal() {
-    rpc_server* server = (rpc_server*)malloc(sizeof(rpc_server));
+    rpc_server *server = (rpc_server *)malloc(sizeof(rpc_server));
     memset(server, 0, sizeof(rpc_server));
     server->server_fd = 1;
     rpc_register(server, "TestName1", add2_i8);
-    rpc_handle* handle = get_rpc_handle(server, "TestName1");
+    rpc_handle *handle = get_rpc_handle(server, "TestName1");
     assert(handle->method_address == (long)add2_i8);
 }
 
 int main() {
-  rpc_register_normal();
-  rpc_register_duplicate();
-  get_rpc_handle_normal();
-  return 0;
+    rpc_register_normal();
+    rpc_register_duplicate();
+    get_rpc_handle_normal();
+    return 0;
 }
