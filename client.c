@@ -21,7 +21,6 @@ int main(int argc, char *argv[]) {
         exit_code = 1;
         goto cleanup;
     }
-    printf("add2 address is %ld", handle_add2->method_address);
 
     for (int i = 0; i < 30; i++) {
         /* Prepare request */

@@ -114,14 +114,10 @@ void rpc_serve_all(rpc_server *srv) {
         }
         int valread = recv(srv->socket, buffer, 1024, 0);
         request* readed_data = (request*)buffer;
-        printf("readed %s\n", (const char*)readed_data);
         rpc_handle* handle = NULL;
         if (readed_data && (readed_data->request_method == 1)) {
-            printf("handle rpc find\n");
-            printf("the requested functions is %s\n", (const char*)&readed_data->data.data2);
             handle = get_rpc_handle(srv, (const char*)&readed_data->data.data2);
             if (handle != NULL) {
-                printf("handle address is %ld\n", handle->method_address);
                 send(srv->socket, (void*)handle, sizeof(rpc_handle), 0);
                 free(handle);
             } else {
@@ -129,13 +125,6 @@ void rpc_serve_all(rpc_server *srv) {
                 send(srv->socket, error, strlen(error), 0);
             }
         } else if (readed_data->request_method == 2) {
-            printf("handle rpc find\n");
-            printf("execute2\n");
-            printf("the requested functions is %d\n", (int)*(char*)&readed_data->data.data2);
-            printf("execute1\n");
-            printf("value1 is %d\n", readed_data->data.data1);
-            printf("length is %d\n", (int)readed_data->data.data2_len);
-            printf("addr is %ld\n", readed_data->address);
             // send(srv->socket, hello, strlen(hello), 0);
             rpc_data data;
             data.data1 = readed_data->data.data1;
@@ -143,7 +132,6 @@ void rpc_serve_all(rpc_server *srv) {
             data.data2_len = 1;
 
             rpc_data* result = ((rpc_handler)readed_data->address)(&data);
-            printf("result is %d\n", result->data1);
 
             rpc_data* response = (rpc_data*)malloc(sizeof(rpc_data));
             memset(response, 0, sizeof(rpc_data));
@@ -156,15 +144,12 @@ void rpc_serve_all(rpc_server *srv) {
                 response->data2_len = result->data2_len;
                 memcpy(&response->data2, &result->data1, 4);
                 send(srv->socket, (void*)response, sizeof(rpc_data) + 5, 0);
-                printf("sended result is %d\n", response->data1);
 
             }
             free(response);
         }
         else {
-            printf("return hello\n");
             send(srv->socket, hello, strlen(hello), 0);
-            printf("Hello message sent\n");
         }
     }
 
@@ -181,7 +166,6 @@ rpc_handle* get_rpc_handle(rpc_server *srv, const char* name) {
         if ((srv->methods[i] != NULL) && (srv->methods[i]->name != NULL) && (strlen(srv->methods[i]->name) != 0) && (strcmp(srv->methods[i]->name, name) == 0)) {
             rpc_handle* handle = (rpc_handle*)malloc(sizeof(rpc_handle));
             memset(handle, 0, sizeof(rpc_handle));
-            printf("found addr, %ld\n", (long)srv->methods[i]->handler);
             handle->method_address = (long)srv->methods[i]->handler;
             return handle;
         }
@@ -198,14 +182,8 @@ rpc_client *rpc_init_client(char *addr, int port) {
 
 	serv_addr.sin6_family = AF_INET6;
 	serv_addr.sin6_port = htons(port);
-
-	// Convert IPv4 and IPv6 addresses from text to binary
-	// form
-    // TODO: Use IP adress from parameter.
 	if (inet_pton(AF_INET6, addr, &serv_addr.sin6_addr)
 		<= 0) {
-		printf(
-			"\nInvalid address/ Address not supported \n");
 		return NULL;
 	}
 
@@ -213,7 +191,6 @@ rpc_client *rpc_init_client(char *addr, int port) {
 		= connect(client_fd, (struct sockaddr*)&serv_addr,
 				sizeof(serv_addr)))
 		< 0) {
-		printf("\nConnection Failed \n");
 		return NULL;
 	}
     rpc_client* client = (rpc_client*)malloc(sizeof(rpc_client));
@@ -235,9 +212,7 @@ rpc_handle *rpc_find(rpc_client *cl, char *name) {
     rpc_handle* handle = (rpc_handle*)malloc(sizeof(rpc_handle));
     memset(handle, 0, sizeof(rpc_handle));
     send(cl->client_fd, (void*)data, size, 0);
-    printf("send items %s\n", (const char*)&data->data.data2);
 	int valread = read(cl->client_fd, (void*)handle, 1024);
-    printf("received func addr %ld\n", handle->method_address);
     free(data);
     close(cl->client_fd);
     return handle;
@@ -252,7 +227,6 @@ rpc_data *rpc_call(rpc_client *cl, rpc_handle *h, rpc_data *payload) {
 		= connect(cl->client_fd, (struct sockaddr*)&cl->serv_addr,
 				sizeof(cl->serv_addr)))
 		< 0) {
-		printf("\nConnection Failed \n");
 		return NULL;
 	}
 
@@ -266,16 +240,13 @@ rpc_data *rpc_call(rpc_client *cl, rpc_handle *h, rpc_data *payload) {
     data->address = h->method_address;
 
     send(cl->client_fd, (void*)data, size, 0);
-    printf("send items %s\n", (const char*)&data->data.data2);
     char* buffer = (char*)malloc(sizeof(rpc_data)+5);
     memset(buffer, 0, sizeof(rpc_data));
 
 	int valread = read(cl->client_fd, (void*)buffer, sizeof(rpc_data)+5);
-    printf("buffer is %s", buffer);
     rpc_data* response = (rpc_data*)buffer;
     response->data2 = NULL;
     response->data2_len = 0;
-    printf("received func result %d\n", response->data1);
     free(data);
     close(cl->client_fd);
     return response;
